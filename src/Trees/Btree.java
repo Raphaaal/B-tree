@@ -2,8 +2,12 @@ package Trees;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 
 public class Btree {
@@ -11,27 +15,21 @@ public class Btree {
 	int order;
 	Node<Integer> root;
 
-	// TO DO : créer un autre constructueur ou le btree peut être loadé directement avec les valeurs à la chaine
-	Btree(Node<Integer> root, int order) {
+	Btree(Integer i, int order) {
 		this.order = order;
-		this.root = root;
+		TreeMap<Integer, List<Node<Integer>>> temp = new TreeMap<>();
+		temp.put(i, null);
+		this.root = new Node<Integer>(temp, null, this);
 	}
 
 	public Node<Integer> search(Integer k) {
-		//Node<Integer> result = null;
 		return root.search(k);
 	}
 
 	public void insert(Integer k) {
 		Node<Integer> insertionNode = this.searchForInsertion(k);
-
 		if(insertionNode.data.containsKey(k))
 			throw new IllegalArgumentException("Valeur déjà présente dans l'arbre");
-		/*
-		if(root.data.size()<order-1)
-			root.addData(k);
-		else
-		 */
 		insertionNode.addData(k);
 	}
 
@@ -50,127 +48,97 @@ public class Btree {
 			return searchResult;
 		return null;
 	}
-
-	/*
-	@Override
-	public String toString() {
-		String s="";
-		List<Node<Integer>> levelNodes = new ArrayList<>();
-		// A calculer a un temps t
-		int sublevelNbNodes = 4;
-		int counter = sublevelNbNodes;
-		List<List<Node<Integer>>> levelNodesLists = new ArrayList<>();
-		while(root.parent != null) 
-			root = root.parent;
-		s+=" ";
-		s+="\t\t\t\t\t" + root.data.keySet() +"\n";
-
-		while(root != null && root.data.values()!= null ) {
-			levelNodes.clear();
-			levelNodesLists.clear();
-
-			for (int h =0; h < counter; ++h) {
-				System.out.println("test");
-
-				Iterator<List<Node<Integer>>> it = root.data.values().iterator();
-				List<Node<Integer>> val = (List<Node<Integer>>) it.next();
-				while(it.hasNext()) {
-					levelNodesLists.add(val);
-					val=(List<Node<Integer>>) it.next();
-				}
-				levelNodesLists.add(val);
-				
-				for (List<Node<Integer>> l : levelNodesLists)
-					levelNodes.addAll(l);
-				
-				for(Node<Integer> root : levelNodes) {
-					for (Integer key : root.data.keySet()) {
-						if(root.data.get(key) !=null) {
-							if(root.data.get(key).get(0) !=null) {
-								++sublevelNbNodes;
-								levelNodes.add(root.data.get(key).get(0));
-							}
-						}
-					}
-					Integer maxKey = root.data.lastKey();
-					if (root.data.get(maxKey) != null) {
-						if(root.data.get(maxKey).get(1) !=null) {
-							++sublevelNbNodes;
-							levelNodes.add(root.data.get(maxKey).get(1));
-						}
-					}
-				}
-				
-				for(int i = 0; i< levelNodes.size(); ++i) {
-					s+= levelNodes.get(i).toString() + "\t";
-				}
-
-				if(levelNodes.get(h).data.firstEntry().getValue().get(0) != null)
-					root = levelNodes.get(h).data.firstEntry().getValue().get(0);
-				else if (levelNodes.get(h).data.firstEntry().getValue().get(1) != null)
-					root = levelNodes.get(h).data.firstEntry().getValue().get(1);
-				else
-					root = null;
-				
-			}
-
-			s+= "\n";
-			counter = sublevelNbNodes;
-			sublevelNbNodes = 0;
-		}
-		return s;
-	}
-	*/
-
-
 	
+	public void deletion(Integer k) {
+		   
+        Node<Integer> nodeKey=searchForInsertion(k);
+        int tmp=0;
+        if(nodeKey.data.get(k)==null)
+            nodeKey.data.remove(k);
+        else {
+            tmp=nodeKey.data.get(k).get(0).data.lastKey();
+
+            while(nodeKey.data.get(tmp) !=null && nodeKey.data.get(tmp).get(1)!=null) {
+                tmp=nodeKey.data.get(k).get(1).data.lastKey();
+           
+            }
+            Node<Integer> nodeParent=searchForInsertion(k);
+            nodeParent.data.get(k).get(0).data.remove(tmp);
+   
+            List <Node <Integer>> child=nodeParent.data.get(k);
+            nodeKey.data.remove(k);
+            nodeKey.data.remove(tmp);
+            nodeKey.data.put(tmp,child);
+        }
+    }
+
 	@Override
 	public String toString() {
-		String s="";
-		Node<Integer> rootLeft=null;
-		Node<Integer> rootRight=null;
+		String s ="";
+		System.out.println("");
 		while(root.parent != null) 
 			root = root.parent;
-		s+=" ";
-		s+="\t\t\t\t" + root.data.keySet() +"\n";
+		s += "\t\t\t\t\t\t\t" +  root.toString() + "\n";
 
-		for (Integer key : root.data.keySet()) {
-			if(root.data.get(key) !=null) {
+		Set<Node<Integer>> childrenNodesBefore = new HashSet<>();
+		Set<Node<Integer>> childrenNodesAfter = new HashSet<>();
 
-
-				if(root.data.get(key).get(0) !=null) {
-					rootLeft=root.data.get(key).get(0);
-					s+=rootLeft.recursivePrint();
+		for(Integer i : root.data.keySet()) {
+			if(root.data.get(i) != null) {
+				for(Node<Integer> n : root.data.get(i)) {
+					childrenNodesBefore.add(n);
 				}
-
-
-				//if(root.data.get(key).get(1) !=null) { 
-				//	rootRight=root.data.get(key).get(1);
-				//	s+=rootRight.recursivePrint();
-				//}
-
-
-
 			}
 		}
-		Integer maxKey = root.data.lastKey();
-		if (root.data.get(maxKey) != null) {
+		for(Node<Integer> n : childrenNodesBefore)
+			s += "\t\t\t\t" + n.toString();
+		s+= "\n";
 
-			if(root.data.get(maxKey).get(1) !=null) {
-				rootRight=root.data.get(maxKey).get(1);
-				s+=rootRight.recursivePrint();
+		do {
+			List<Node<Integer>> childrenList = new ArrayList<>();
+			for(Node<Integer> cn : childrenNodesBefore) {
+				childrenList.addAll(cn.getChildren());
 			}
-		}
+
+			Iterator<Node<Integer>> itcn= childrenList.iterator();
+			LinkedList<Node<Integer>> l = new LinkedList<>();
+			if(itcn.hasNext()) {
+				Node<Integer> valmin = itcn.next();
+				l.addFirst(valmin);
+				Node<Integer> val = itcn.next();
+				while(itcn.hasNext()) {
+					if(valmin.compareTo(val) > 0 ) {
+						valmin=val;
+						l.addFirst(val);
+					}
+					else
+						l.addLast(val);
+					val=itcn.next();
+				}
+			}
+			for (int i = 0; i < l.size(); ++i)
+				s+= l.get(i) + "\t";
+			s+= "\n";
+
+			childrenNodesBefore.clear();
+			for(Node<Integer> cn : childrenList) 
+				childrenNodesBefore.add(cn);
+
+		} while (!childrenNodesBefore.isEmpty()) ;
+
 		return s;
 	}
-	 
+
+
+
+
 
 	public static void main(String[] args) {
-		Node<Integer> root = new Node<Integer>(new TreeMap<Integer, List<Node<Integer>>>(), null);
-		root.data.put(10, null);
-		Btree btree = new Btree(root, 5);
+		System.out.println("==================");
+		System.out.println("=B-TREE INSERTION=");
+		System.out.println("==================");
 
-
+		Btree btree = new Btree(10, 5);
 		btree.insert(15);
 		btree.insert(30);
 		btree.insert(27);
@@ -178,39 +146,48 @@ public class Btree {
 		btree.insert(40);
 		btree.insert(45);
 		btree.insert(37);
-
-		btree.search(20);
-
 		btree.insert(20);
-
+		btree.insert(50);
 		btree.insert(55);
-
-		btree.insert(1);
-
-		btree.insert(7);
-
-
-		btree.insert(16);
-		btree.insert(26);
-
-
-
+		btree.insert(46);
+		btree.insert(71);
+		btree.insert(66);
 		btree.insert(74);
-		/*
 		btree.insert(85);
 		btree.insert(90);
 		btree.insert(79);
 		btree.insert(78);
-
 		btree.insert(95);
 		btree.insert(25);
 		btree.insert(81);
 		btree.insert(68);
 		btree.insert(60);
 		btree.insert(65);
-
-		 */
+		
 		System.out.println(btree);
+
+		System.out.println("================");
+		System.out.println("=====SEARCH=====");
+		System.out.println("================");
+		System.out.println("");
+		System.out.println("Searching for 27...");
+		System.out.println(btree.search(27));
+		System.out.println("");
+		System.out.println("Searching for 1000...");
+		System.out.println(btree.search(1000));
+		System.out.println("");
+		System.out.println("================");
+		System.out.println("=====DELETION=====");
+		System.out.println("================");
+		System.out.println("");
+		System.out.println("Deleting 55 in the lower-right corner (simple deletion)...");
+		btree.deletion(55);
+		System.out.println(btree);
+		System.out.println("");
+		System.out.println("Deleting 46 at the top (simple deletion)...");
+		btree.deletion(46);
+		System.out.println(btree);
+
 
 
 	}
